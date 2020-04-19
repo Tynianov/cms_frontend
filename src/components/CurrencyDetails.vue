@@ -6,18 +6,19 @@
                     <v-img :src="metadata.logo" id="logo"/>
                     <h3>{{metadata.name}} ({{metadata.symbol}})</h3>
                     <div class="urls-box">
-                        <p><a :href="metadata.urls.website">Website</a></p>
-                        <p><a :href="metadata.urls.technical_doc">Documentation</a></p>
-                        <p><a :href="metadata.urls.source_code">Source code</a></p>
-                        <span>Explorers: ( </span>
+                        <p><v-icon>link</v-icon><a :href="metadata.urls.website"> Website</a></p>
+                        <p><v-icon>description</v-icon><a :href="metadata.urls.technical_doc"> Documentation</a></p>
+                        <p><v-icon>code</v-icon><a :href="metadata.urls.source_code"> Source code</a></p>
+                        <v-icon>search</v-icon><span> Explorers: ( </span>
                         <span class="explorers" v-for="(item, i) in metadata.urls.explorer"><a :href="item">{{i+1}}</a></span>
                         <span> )</span>
-                        <p mt-5><a :href="metadata.urls.message_board">Message Board</a></p>
+                        <p mt-5><v-icon>insert_comment</v-icon><a :href="metadata.urls.message_board"> Message Board</a></p>
                     </div>
                 </v-col>
                 <v-col>
                     <span class="price-tag">Price {{quotes.quote.USD.price}}</span>
                     <v-data-table
+                        class="table"
                         :headers="tableHeaders"
                         hide-default-footer
                         :items="tableItems"
@@ -26,7 +27,35 @@
                     <p>{{metadata.description}}</p>
                 </v-col>
                 <v-col>
-<!--                    TODO add currency converter-->
+                    <div class="converter">
+                        <v-flex row>
+                            <v-text-field
+                                class="converter-input"
+                                placeholder="Enter amount"
+                                :label="metadata.symbol"
+                                @input="(val) => {this.$router.push({query: {...this.$route.query, ['amount']: val}})}"
+                            />
+                            <v-icon>arrow_forward</v-icon>
+                            <v-spacer/>
+                            <v-select
+                                label="To"
+                                class="converter-input"
+                                :items="availableCurrency"
+                                @change="(val) => {this.$router.push({query: {...this.$route.query, ['convert']: val}})}"
+                            />
+                        </v-flex>
+                        <v-flex column class="justify-center convert-result">
+                            <v-btn
+                            @click="convert"
+                            :disabled="$route.query.amount===undefined || $route.query.convert===undefined"
+                            >Convert
+                            </v-btn>
+                            <v-text-field
+                                v-model="converted_price"
+                                readonly
+                            />
+                        </v-flex>
+                    </div>
                 </v-col>
             </v-row>
         </v-container>
@@ -117,7 +146,9 @@
                         last_updated: "2020-04-18T18:12:52.000Z"
                     }
 
-                }}}),
+                }},
+            converted_price: ''
+        }),
         methods: {
             getCurrencyMetadata(id){
                 axios.get(BASE_API_URL+'/currency-metadata/'+id)
@@ -146,6 +177,20 @@
                 console.log(this.metadata);
                 console.log(this.quotes)
                 this.loaded = true;
+            },
+            convert(){
+                const params = {
+                    id: this.metadata.id,
+                    convert: this.$route.query.convert,
+                    amount: this.$route.query.amount
+                }
+                axios.get(BASE_API_URL+'/convert', {params: params})
+                    .then(resp => {
+                            this.converted_price = resp.data.price;
+                    })
+                    .catch(err => {
+                        console.log(err)
+                    })
             }
         },
         computed:{
@@ -164,6 +209,9 @@
                     circulating_supply: this.quotes.circulating_supply,
                     total_supply: this.quotes.total_supply
                 }]
+            },
+            availableCurrency(){
+                return ['USD', 'EUR', 'UAH']
             }
         }
         // beforeRouteEnter(to, from, next){
@@ -183,6 +231,7 @@
     }
     .coin-data{
         text-align: left !important;
+        max-width: 75%;
     }
     .urls-box{
         margin-top: 25px;
@@ -195,5 +244,17 @@
     }
     .price-tag{
 
+    }
+    .converter-input{
+        max-width: 45%;
+    }
+    .converter{
+        margin-left: 75px;
+    }
+    .convert-result{
+        margin-top: 20px;
+    }
+    thead.table{
+        background-color: aqua !important;
     }
 </style>
