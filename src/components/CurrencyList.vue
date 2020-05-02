@@ -14,9 +14,24 @@
                         <template v-slot:item.name="{ item }">
                             <router-link :to="{name: 'currency-details', params: {id: item.id}}">{{ item.name }}</router-link>
                         </template>
+                        <template v-slot:item.price="{ item }">
+                            <span>${{item.price | decimalToRepresentation}}</span>
+                        </template>
+                        <template v-slot:item.market_cap="{ item }">
+                            <span>${{ item.market_cap | decimalToRepresentation }}</span>
+                        </template>
+                        <template v-slot:item.volume_24h="{ item }">
+                            <span>${{ item.volume_24h | decimalToRepresentation }}</span>
+                        </template>
+                        <template v-slot:item.circulating_supply="{ item }">
+                            <span>{{ item.circulating_supply | decimalToRepresentation }} {{item.symbol}}</span>
+                        </template>
+                        <template v-slot:item.market_cap="{ item }">
+                            <span>${{item.market_cap | decimalToRepresentation}}</span>
+                        </template>
                         <template v-slot:item.percent_change_24h="{ item }">
-                            <span v-if="parseFloat(item.percent_change_24h) >= 0" class="green--text">{{ item.percent_change_24h }}</span>
-                            <span v-else class="red--text">{{ item.percent_change_24h }}</span>
+                            <span v-if="parseFloat(item.percent_change_24h) >= 0" class="green--text"><v-icon>arrow_drop_up</v-icon>{{ item.percent_change_24h }}%</span>
+                            <span v-else class="red--text"><v-icon>arrow_drop_down</v-icon>{{ item.percent_change_24h }}%</span>
                         </template>
                     </v-data-table>
                 </v-card>
@@ -27,9 +42,11 @@
     import router from '../router/index'
     import axios from 'axios'
     import {BASE_API_URL} from "../router/index";
+    import decimalRepresentationMixin from "@/mixins/decimalRepresentationMixin";
 
     export default {
         name: "CurrencyList",
+        mixins: [decimalRepresentationMixin],
         data: () => ({
             currency_list: []
         }),
@@ -49,9 +66,20 @@
             getCurrencyList(){
                 axios.get(BASE_API_URL+'/currency-list')
                     .then(res => {
-                        console.log(res);
                         this.currency_list = res.data.result;
                     })
+            }
+        },
+        filters: {
+            toRepresentation(val){
+                let stringRepresentation = val.toString();
+                for (let i = stringRepresentation.length; i > 0; i--){
+                    if (i % 3 === 0){
+                        stringRepresentation[i+1] = ',';
+                    }
+                }
+                console.log('!', stringRepresentation)
+                return stringRepresentation
             }
         },
         created(){

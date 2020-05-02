@@ -16,15 +16,28 @@
                     </div>
                 </v-col>
                 <v-col>
-                    <span class="price-tag">Price {{quotes.quote.USD.price}}</span>
+                    <span class="price-tag">Price ${{quotes.quote.USD.price | decimalToRepresentation}}</span>
                     <v-data-table
                         class="table"
                         :headers="tableHeaders"
                         hide-default-footer
                         :items="tableItems"
-                    />
+                    >
+                        <template v-slot:item.market_cap="{ item }">
+                            <span>${{item.market_cap | decimalToRepresentation}}</span>
+                        </template>
+                        <template v-slot:item.volume_24h="{ item }">
+                            <span>${{item.volume_24h | decimalToRepresentation}}</span>
+                        </template>
+                        <template v-slot:item.circulating_supply="{ item }">
+                            <span>{{metadata.symbol}} {{item.circulating_supply | decimalToRepresentation}}</span>
+                        </template>
+                        <template v-slot:item.total_supply="{ item }">
+                            <span>{{metadata.symbol}}  {{item.total_supply | decimalToRepresentation}}</span>
+                        </template>
+                    </v-data-table>
                     <h3>About {{metadata.name}}</h3>
-                    <p>{{metadata.description}}</p>
+                    <p class="text-start">{{metadata.description}}</p>
                 </v-col>
                 <v-col>
                     <div class="converter">
@@ -65,9 +78,11 @@
 <script>
     import axios from 'axios'
     import {BASE_API_URL} from "../router/index";
+    import decimalRepresentationMixin from "@/mixins/decimalRepresentationMixin";
 
     export default {
         name: "CurrencyDetails",
+        mixins: [decimalRepresentationMixin],
         data: () => ({
             loaded: false,
             metadata: {
@@ -147,7 +162,8 @@
                     }
 
                 }},
-            converted_price: ''
+            converted_price: '',
+            chartData: {}
         }),
         methods: {
             getCurrencyMetadata(id){
@@ -213,7 +229,21 @@
             availableCurrency(){
                 return ['USD', 'EUR', 'UAH']
             }
-        }
+        },
+        // filters:{
+        //     decimalToRepresentation(val){
+        //         let decimalPart = val.toString().split('.')[1];
+        //         let str = Math.trunc(val).toString();
+        //         for (let i = str.length - 3; i >= 0; i-=3){
+        //             if (i){
+        //                 str = str.slice(0, i) + ',' + str.slice(i)
+        //             }
+        //         }
+        //         if (decimalPart)
+        //             return str + '.'+ decimalPart
+        //         return str
+        //     }
+        // }
         // beforeRouteEnter(to, from, next){
         //     let id = to.params.id;
         //     next(vm => {
@@ -231,7 +261,7 @@
     }
     .coin-data{
         text-align: left !important;
-        max-width: 75%;
+        max-width: 70%;
     }
     .urls-box{
         margin-top: 25px;
@@ -249,12 +279,20 @@
         max-width: 45%;
     }
     .converter{
-        margin-left: 75px;
+        margin-left: 55px;
     }
     .convert-result{
         margin-top: 20px;
     }
     thead.table{
         background-color: aqua !important;
+    }
+</style>
+<style>
+    .container{
+        max-width: 75%;
+    }
+    .v-data-table thead{
+        background-color: #aaa8a8;
     }
 </style>
