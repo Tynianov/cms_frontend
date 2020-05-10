@@ -1,6 +1,6 @@
 <template>
     <v-content>
-        <v-container>
+        <v-container v-if="loaded">
             <v-row>
                 <v-col class="coin-data">
                     <v-img :src="metadata.logo" id="logo"/>
@@ -36,7 +36,7 @@
                             <span>{{metadata.symbol}}  {{item.total_supply | decimalToRepresentation}}</span>
                         </template>
                     </v-data-table>
-                    <h3>About {{metadata.name}}</h3>
+                    <h3 style="margin-bottom: 20px; margin-top: 20px">About {{metadata.name}}</h3>
                     <p class="text-start">{{metadata.description}}</p>
                 </v-col>
                 <v-col>
@@ -85,92 +85,15 @@
         mixins: [decimalRepresentationMixin],
         data: () => ({
             loaded: false,
-            metadata: {
-                urls: {
-                    website: [
-                        "https://bitcoin.org/"
-                    ],
-                    technical_doc: [
-                        "https://bitcoin.org/bitcoin.pdf"
-                    ],
-                    twitter: [],
-                    reddit: [
-                        "https://reddit.com/r/bitcoin"
-                    ],
-                    message_board: [
-                        "https://bitcointalk.org"
-                    ],
-                    announcement: [],
-                    chat: [],
-                    explorer: [
-                        "https://blockchain.coinmarketcap.com/chain/bitcoin",
-                        "https://blockchain.info/",
-                        "https://live.blockcypher.com/btc/",
-                        "https://blockchair.com/bitcoin",
-                        "https://explorer.viabtc.com/btc"
-                    ],
-                    source_code: [
-                        "https://github.com/bitcoin/"
-                    ]
-                },
-                logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/1.png",
-                id: 1,
-                name: "Bitcoin",
-                symbol: "BTC",
-                slug: "bitcoin",
-                description: "Bitcoin (BTC) is a consensus network that enables a new payment system and a completely digital currency. Powered by its users, it is a peer to peer payment network that requires no central authority to operate. On October 31st, 2008, an individual or group of individuals operating under the pseudonym \"Satoshi Nakamoto\" published the Bitcoin Whitepaper and described it as: \"a purely peer-to-peer version of electronic cash, which would allow online payments to be sent directly from one party to another without going through a financial institution.\"",
-                notice: null,
-                date_added: "2013-04-28T00:00:00.000Z",
-                tags: [
-                    "mineable"
-                ],
-                tag_names: [
-                    "Mineable"
-                ],
-                tag_groups: [
-                    "APPLICATION"
-                ],
-                is_hidden: 0,
-                platform: null,
-                category: "coin"
-            },
-            quotes: {
-                id: 1,
-                name: "Bitcoin",
-                symbol: "BTC",
-                slug: "bitcoin",
-                num_market_pairs: 7868,
-                date_added: "2013-04-28T00:00:00.000Z",
-                tags: [
-                    "mineable"
-                ],
-                max_supply: 21000000,
-                circulating_supply: 18332350,
-                total_supply: 18332350,
-                platform: null,
-                cmc_rank: 1,
-                last_updated: "2020-04-18T18:12:52.000Z",
-                quote: {
-                    USD: {
-                        price: 7233.53,
-                        volume_24h: 32509859356.40,
-                        percent_change_1h: -0.02,
-                        percent_change_24h: 2.11,
-                        percent_change_7d: 5.95,
-                        market_cap: 132607706601.03,
-                        last_updated: "2020-04-18T18:12:52.000Z"
-                    }
-
-                }},
-            converted_price: '',
-            chartData: {}
+            metadata: {},
+            quotes: {},
+            converted_price: ''
         }),
         methods: {
             getCurrencyMetadata(id){
                 axios.get(BASE_API_URL+'/currency-metadata/'+id)
                     .then(res => {
                         this.metadata = res.data.result;
-                        console.log(1, this.metadata)
                     })
                     .catch(err => {
                         console.log('Internal server error. ' +  err);
@@ -179,9 +102,7 @@
             getCurrencyQuotes(id){
                 axios.get(BASE_API_URL+'/currency-quotes/'+id)
                     .then(res => {
-                        console.log(res)
                         this.quotes = res.data.result;
-                        console.log(2, this.quotes)
                     })
                     .catch(err => {
                         console.log('Internal server error. ' +  err);
@@ -190,8 +111,6 @@
             loadDetails(id){
                 this.getCurrencyMetadata(id);
                 this.getCurrencyQuotes(id);
-                console.log(this.metadata);
-                console.log(this.quotes)
                 this.loaded = true;
             },
             convert(){
@@ -230,26 +149,12 @@
                 return ['USD', 'EUR', 'UAH']
             }
         },
-        // filters:{
-        //     decimalToRepresentation(val){
-        //         let decimalPart = val.toString().split('.')[1];
-        //         let str = Math.trunc(val).toString();
-        //         for (let i = str.length - 3; i >= 0; i-=3){
-        //             if (i){
-        //                 str = str.slice(0, i) + ',' + str.slice(i)
-        //             }
-        //         }
-        //         if (decimalPart)
-        //             return str + '.'+ decimalPart
-        //         return str
-        //     }
-        // }
-        // beforeRouteEnter(to, from, next){
-        //     let id = to.params.id;
-        //     next(vm => {
-        //         vm.loadDetails(id);
-        //     });
-        // }
+        beforeRouteEnter(to, from, next){
+            let id = to.params.id;
+            next(vm => {
+                vm.loadDetails(id);
+            });
+        }
     }
 </script>
 
@@ -273,7 +178,7 @@
         margin-right: 5px;
     }
     .price-tag{
-
+        margin-bottom: 50px!important;
     }
     .converter-input{
         max-width: 45%;
